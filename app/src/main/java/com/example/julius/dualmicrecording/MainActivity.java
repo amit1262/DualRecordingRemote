@@ -1,10 +1,11 @@
 package com.example.julius.dualmicrecording;
 
-//import org.jtransforms.fft.FloatFFT_1D;
-
+import android.app.Activity;
+import android.content.Context;
 import android.media.audiofx.NoiseSuppressor;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -24,7 +25,7 @@ import java.util.Date;
 
 import android.view.KeyEvent;
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends AppCompatActivity {
 
     private static final int RECORDER_SAMPLERATE = 44100,
             RECORDER_CHANNELS = AudioFormat.CHANNEL_IN_STEREO,
@@ -34,10 +35,10 @@ public class MainActivity extends ActionBarActivity {
     private boolean isRecording = false;
     String filePath1, filePath2;
     int min_buffer_length,
-            BufferElements2Rec = 4096*5, // number of shorts not bytes
+            BufferElements2Rec = 4096*2, // number of shorts not bytes
             BytesPerElement = 2,
-            maxLag = 17,  //max possible lag between two samples in terms of number of frames (e.g. 17 samples of lag for phone length 0.13m and sampling rate 44.1khz)
-            threadSleepTime = 300; //time in ms
+            maxLag = 25,  //max possible lag between two samples in terms of number of frames (e.g. 17 samples of lag for phone length 0.13m and sampling rate 44.1khz)
+            threadSleepTime = 200; //time in ms
     double phoneLength = 0.134, //separation between two microphones in meters
             angle = 0,
             soundVelocity = 343; //velocity of sound in air in m/s
@@ -67,6 +68,11 @@ public class MainActivity extends ActionBarActivity {
                 RECORDER_AUDIO_ENCODING, min_buffer_length * 40);
 
         recorder.startRecording();
+        if (NoiseSuppressor.isAvailable()){
+            NoiseSuppressor ns=NoiseSuppressor.create(recorder.getAudioSessionId());
+            ns.setEnabled(true);
+        }
+
         isRecording = true;
         recordingThread = new Thread(new Runnable() {
             public void run() {
@@ -141,7 +147,7 @@ public class MainActivity extends ActionBarActivity {
 
     public static boolean isAudible(short[] data) {
         double rms = getRootMeanSquared(data);
-        return (rms > 580 && 5500 > rms);
+        return (rms > 680 && 15500 > rms);
     }
 
     public static double getRootMeanSquared(short[] data) {
